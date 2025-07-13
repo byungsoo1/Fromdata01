@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>관리자 로그인</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background-color: #fff;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 300px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #1976d2;
+            border: none;
+            color: white;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>관리자 로그인</h2>
+        <form method="POST">
+            <label for="password">비밀번호:</label>
+            <input type="password" name="password" required />
+            <button type="submit">로그인</button>
+        </form>
+    </div>
+</body>
+</html>

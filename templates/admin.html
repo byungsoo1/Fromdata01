@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>관리자 페이지</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        h1 {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>관리자 페이지</h1>
+    <a href="{{ url_for('logout') }}">로그아웃</a>
+    <table>
+        <thead>
+            <tr>
+                <th>이름</th>
+                <th>핸드폰번호</th>
+                <th>파일명</th>
+                <th>핸드폰기종</th>
+                <th>다운로드 여부</th>
+                {% for i in range(1, 11) %}
+                    <th>구간 {{ i }}</th>
+                    <th>시나리오 {{ i }}</th>
+                {% endfor %}
+                <th>세탁기</th>
+                <th>에어컨</th>
+                <th>추가가전1</th>
+                <th>추가가전2</th>
+                <th>주거형태</th>
+                <th>다운로드</th>
+                <th>삭제</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for upload in uploads %}
+            <tr>
+                <td>{{ upload[1] }}</td>  <!-- 이름 -->
+                <td>{{ upload[2] }}</td>  <!-- 핸드폰번호 -->
+                <td>{{ upload[4] }}</td>  <!-- 파일명 -->
+                <td>{{ upload[3] }}</td>  <!-- 핸드폰기종 (device) -->
+                <td>{{ '완료' if upload[5] == 1 else '대기중' }}</td>  <!-- 다운로드 여부 -->
+                {% for i in range(6, 46, 2) %}
+                    <td>{{ upload[i] }}</td>
+                    <td>{{ upload[i+1] }}</td>
+                {% endfor %}
+                <td>{{ upload[46] }}</td> <!-- 세탁기 -->
+                <td>{{ upload[47] }}</td> <!-- 에어컨 -->
+                <td>{{ upload[48] }}</td> <!-- 추가가전1 -->
+                <td>{{ upload[49] }}</td> <!-- 추가가전2 -->
+                <td>{{ upload[50] }}</td> <!-- 주거형태 -->
+                <td><a href="{{ url_for('download_file', filename=upload[4]) }}">다운로드</a></td>
+                <td>
+                    <form action="{{ url_for('delete', file_id=upload[0]) }}" method="POST" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                        <button type="submit">삭제</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
+

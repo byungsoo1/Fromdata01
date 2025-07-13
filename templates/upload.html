@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>작업자 파일 업로드</title>
+    <style>
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .form-section {
+            width: 55%;
+        }
+        .example-section {
+            width: 43%;
+        }
+        .example-section img {
+            width: 100%;
+            max-height: none;
+            object-fit: contain;
+        }
+        table, th, td {
+            border: 1px solid #000;
+            border-collapse: collapse;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>작업자 파일 업로드</h1>
+    <div class="container">
+        <div class="form-section">
+            <form method="POST" enctype="multipart/form-data">
+                <label for="name">이름:</label>
+                <input type="text" name="name" required /><br /><br />
+
+                <label for="phone">핸드폰번호 (010-xxxx-xxxx):</label>
+                <input type="text" name="phone" required /><br /><br />
+
+                <label for="device">핸드폰기종 (예: 아이폰15pro):</label>
+                <input type="text" name="device" /><br /><br />
+
+                <label for="file">파일 선택:</label>
+                <input type="file" name="file" required /><br /><br />
+
+                <h3>구간/시나리오 입력 (최대 10개)</h3>
+                {% for i in range(1, 11) %}
+                    <label>구간 {{ i }}:</label>
+                    <input type="text" name="section_{{ i }}" />
+                    <label>시나리오:</label>
+                    <input type="text" name="scenario_{{ i }}" /><br /><br />
+                {% endfor %}
+
+                <h3>참여자 정보</h3>
+                <label for="washer">세탁기:</label>
+                <input type="text" name="washer" /><br /><br />
+
+                <label for="aircon">에어컨:</label>
+                <input type="text" name="aircon" /><br /><br />
+
+                <label for="additional_appliance">추가가전제품:</label>
+                <input type="text" name="additional_appliances_1" /> :
+                <input type="text" name="additional_appliances_2" /><br /><br />
+
+                <label for="residence">주거 형태 (예: 아파트, 빌라 등):</label>
+                <input type="text" name="residence" /><br /><br />
+
+                <button type="submit">업로드</button>
+            </form>
+        </div>
+        <div class="example-section">
+            <h4>예시 이미지 3</h4>
+            <img src="{{ url_for('static', filename='example3.png') }}" alt="예시 이미지 3" /><br /><br />
+            <h4>예시 이미지 1</h4>
+            <img src="{{ url_for('static', filename='example.png') }}" alt="예시 이미지 1" /><br /><br />
+            <h4>예시 이미지 2</h4>
+            <img src="{{ url_for('static', filename='example2.png') }}" alt="예시 이미지 2" />
+        </div>
+    </div>
+</body>
+</html>
+
