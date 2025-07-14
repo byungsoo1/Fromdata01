@@ -1,13 +1,13 @@
-from flask import Flask, render_template, request, redirect, flash, url_for
+from flask import Flask, render_template, request, redirect, flash
 import os
 import sqlite3
 from werkzeug.utils import secure_filename
-from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
+
 UPLOAD_FOLDER = 'uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # 폴더 없으면 생성
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 DB_FILE = 'uploads.db'
@@ -15,44 +15,47 @@ DB_FILE = 'uploads.db'
 def init_db():
     with sqlite3.connect(DB_FILE) as conn:
         c = conn.cursor()
-        c.execute('''CREATE TABLE IF NOT EXISTS uploads (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        name TEXT,
-                        phone TEXT,
-                        device TEXT,
-                        filename TEXT,
-                        downloaded INTEGER,
-                        section1 TEXT, scenario1 TEXT,
-                        section2 TEXT, scenario2 TEXT,
-                        section3 TEXT, scenario3 TEXT,
-                        section4 TEXT, scenario4 TEXT,
-                        section5 TEXT, scenario5 TEXT,
-                        section6 TEXT, scenario6 TEXT,
-                        section7 TEXT, scenario7 TEXT,
-                        section8 TEXT, scenario8 TEXT,
-                        section9 TEXT, scenario9 TEXT,
-                        section10 TEXT, scenario10 TEXT,
-                        washer TEXT,
-                        aircon TEXT,
-                        additional_appliances_1 TEXT,
-                        additional_appliances_2 TEXT,
-                        residence TEXT
-                    )''')
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS uploads (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                phone TEXT,
+                device TEXT,
+                filename TEXT,
+                downloaded INTEGER,
+                section1 TEXT, scenario1 TEXT,
+                section2 TEXT, scenario2 TEXT,
+                section3 TEXT, scenario3 TEXT,
+                section4 TEXT, scenario4 TEXT,
+                section5 TEXT, scenario5 TEXT,
+                section6 TEXT, scenario6 TEXT,
+                section7 TEXT, scenario7 TEXT,
+                section8 TEXT, scenario8 TEXT,
+                section9 TEXT, scenario9 TEXT,
+                section10 TEXT, scenario10 TEXT,
+                washer TEXT,
+                aircon TEXT,
+                additional_appliances_1 TEXT,
+                additional_appliances_2 TEXT,
+                residence TEXT
+            )
+        ''')
         conn.commit()
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
-    print("✅ 디버깅 시작")  # 배포 반영 여부 확인용
-
     if request.method == 'POST':
         name = request.form['name']
         phone = request.form['phone']
         device = request.form.get('device', '')
 
         file = request.files['file']
+        if file.filename == '':
+            flash('파일을 선택해주세요.', 'error')
+            return redirect(request.url)
         filename = secure_filename(file.filename)
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(file_path)
+        file.save(file_path)  # 파일 실제 저장
 
         sections = []
         for i in range(1, 11):
@@ -65,9 +68,6 @@ def upload_file():
         additional_appliances_2 = request.form.get('additional_appliances_2', '')
         residence = request.form.get('residence', '')
 
-        print("✅ sections 개수:", len(sections))
-        print("📋 sections 내용:", sections)
-
         values = [
             name, phone, device, filename, 0,
             *sections,
@@ -75,8 +75,6 @@ def upload_file():
             additional_appliances_1, additional_appliances_2,
             residence
         ]
-
-        print("🧮 values 개수:", len(values))
 
         try:
             with sqlite3.connect(DB_FILE) as conn:
@@ -104,16 +102,24 @@ def upload_file():
                 ''', values)
                 conn.commit()
                 flash('업로드 성공!', 'success')
-                print("✅ DB 저장 성공")
         except Exception as e:
-            print("❌ DB 저장 중 오류:", e)
             flash(f'오류 발생: {e}', 'error')
             return redirect(request.url)
 
     return render_template('upload.html')
 
+@app.route('/admin')
+def admin():
+    try:
+        with sqlite3.connect(DB_FILE) as conn:
+            c = conn.cursor()
+            c.execute("SELECT * FROM uploads ORDER BY id DESC")
+            uploads = c.fetchall()
+        return render_template('admin.html', uploads=uploads)
+    except Exception as e:
+        print("❌ 관리자 페이지 오류:", e)
+        return "관리자 페이지 조회 중 오류가 발생했습니다.", 500
+
 if __name__ == '__main__':
     init_db()
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
-
+    app.run(host='0.0.0.0', port=10000)
