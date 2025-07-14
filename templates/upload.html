@@ -24,10 +24,30 @@
             border-collapse: collapse;
             padding: 5px;
         }
+        .message {
+            color: green;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .error-message {
+            color: red;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
     <h1>작업자 파일 업로드</h1>
+
+    <!-- ✅ Flash 메시지 표시 영역 -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="{{ 'error-message' if category == 'error' else 'message' }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
     <div class="container">
         <div class="form-section">
             <form method="POST" enctype="multipart/form-data">
@@ -79,4 +99,6 @@
     </div>
 </body>
 </html>
+
+
 
