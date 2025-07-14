@@ -5,8 +5,8 @@ import dropbox
 from flask import Flask, request, redirect, render_template, url_for, flash
 
 # Dropbox 토큰 및 경로 설정
-DROPBOX_ACCESS_TOKEN = "sl.u.AF2x50wREBjtXLRP1ZmZWvaoIC6r_PglYVVYq6majDNLpaye0DnfUX5KKfgrNt1JuCq6X9bC7Cu2fUl5F1k6MZxJeVP_X2bD6FNkFkfLVKfhJ_Vb13wI4BCKC-mTzgMdZIMS9RYvHpTC2Cmlga3rQCfFCYk_FNMdmfyMNnpdst247Xl-Bvb1DnAbfDPBptT_5q9OgR-4fa5kI8eaGoDAJtp4eRdQ-fllEV1ZDn7hHk-uVy8Rvzja1NOBsVmMTIJ1TOtY9GOHwdf9h7BKX2nNHanTJKGAy0dmXWbnoN_5FgQ_Cp9W3d9-6Am-iFnoLN4O1ctls5ECJmbWvPtlL3ZZYbIokwdYslgKdGbEl16zt2SvTdGmwSzBSMA69cSRL1tj-L5r96NLn_DZK1wPJpeNmfzrA-cjkRAadsQE2p9LI6gmXl-m79CHUsxt_PA3DNSCv4nE7iWLryNcNRW87H9PUQpCs7YIv6G2uXtvVDEqEx4g2cu-o0tk4qzHHyoLPNCYUAz5Ifmhj4YQZvMMO-0m_8d5SpFvC7TPU3YHS_q1vJfpJGJ_G4bFPvNIt9FBl_nKYhfWzoPb8iSwhogTBU0gODrDLTVjcwpBl821AvHukSZZETxBVbIXMak8Nz5UFk13HDnOry6HyqQ3eIaPNN3Phbyof48RA1pq3ickqu-fMZ90bxclccg1w8hHHlGIudBfn1XRqr-Kiuyu4VqTqQCU4fRONlXrNyIe2-QQb_U4WBwb_sSaT9hvVi5tzCeEE2pOjVG-pvCLViX80k_eA4at7y9FSjthdOALXWMP4KPmA7FUXhPV93C30iPyrdQNRp2qNZ8TqL-eCCMVrWkxC6gWtxL7rw-5Z4lGGRzQKJ2XrYU12vPNTjkH7VyI8HYyN59kGw8EPJR-OhGyTVtPg2-SNCTdArkJQN6vQexKV_Tnldg6UYNuqZP2CEEZztPs8aE-vgZNU7-_Ht0Sl6vXbCWyJqMzpyFgCY9N4mgb87-F6m4S4LX3cnsrAL-DOGVEUIkpD4uHpGedE6HCWgz5dv_zBey7Y37pifkc9l9aFnJoRRioRCPJWZkLKfvGwcu8YOmIuV79OSsyZLM_UJ45Db_gJBJ5X-C4MOQxVIp7iLx7LwxtHSQrDAdK-2TtKjUC6_DuFZQDTUs2VqL6N00j3lLJCSuvZGQQ9BnvwW_NleKx0ZjlBk1sLtON0Le5zFvmL5n0BmuXazNJ845frMb6U-ZnARH_CDKyzgUYzr0RNQEAeH0UZRLF7u_avvE9aDYQvjnYyn8"
-DROPBOX_UPLOAD_PATH = "/FromData_Result"  # 폴더명 변경됨
+DROPBOX_ACCESS_TOKEN = "슬기롭게_토큰_입력하세요"
+DROPBOX_UPLOAD_PATH = "/FromData_Result"
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -55,7 +55,7 @@ def upload_file():
     if request.method == 'POST':
         name = request.form['name']
         phone = request.form['phone']
-        device = request.form.get('device', '')
+        device = request.form.get('device', '') or ''
         file = request.files['file']
 
         if file:
@@ -68,19 +68,32 @@ def upload_file():
                 dropbox_path = f"{DROPBOX_UPLOAD_PATH}/{unique_filename}"
                 upload_to_dropbox(local_path, dropbox_path)
             except Exception as e:
-                flash("\u274c Dropbox \uc5c5\ub85c\ub4dc \uc2e4\ud328: " + str(e), "error")
+                flash("\u274c Dropbox 업로드 실패: " + str(e), "error")
                 return redirect(url_for('upload_file'))
 
             sections = []
             for i in range(1, 11):
-                sections.append(request.form.get(f'section_{i}', ''))
-                sections.append(request.form.get(f'scenario_{i}', ''))
+                sections.append(request.form.get(f'section_{i}', '') or '')
+                sections.append(request.form.get(f'scenario_{i}', '') or '')
 
-            washer = request.form.get('washer', '')
-            aircon = request.form.get('aircon', '')
-            additional_appliances_1 = request.form.get('additional_appliances_1', '')
-            additional_appliances_2 = request.form.get('additional_appliances_2', '')
-            residence = request.form.get('residence', '')
+            # 로그 찍기 (디버깅용)
+            print(f"✅ sections 길이: {len(sections)}")   # 꼭 20개여야 함
+            print(f"📋 sections 내용: {sections}")
+
+            washer = request.form.get('washer', '') or ''
+            aircon = request.form.get('aircon', '') or ''
+            additional_appliances_1 = request.form.get('additional_appliances_1', '') or ''
+            additional_appliances_2 = request.form.get('additional_appliances_2', '') or ''
+            residence = request.form.get('residence', '') or ''
+
+            values_tuple = (
+                name, phone, device, unique_filename, 0,
+                *sections,
+                washer, aircon, additional_appliances_1, additional_appliances_2, residence
+            )
+
+            print(f"✅ values_tuple 길이: {len(values_tuple)}")  # 꼭 29개여야 함
+            print(f"📋 values_tuple 내용: {values_tuple}")
 
             conn = sqlite3.connect(DATABASE)
             c = conn.cursor()
@@ -102,13 +115,14 @@ def upload_file():
                     residence
                 )
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (name, phone, device, unique_filename, 0, *sections,
-                  washer, aircon, additional_appliances_1, additional_appliances_2, residence))
+            ''', values_tuple)
             conn.commit()
             conn.close()
-            flash("\u2705 \uc5c5\ub85c\ub4dc \uc644\ub8cc \ubc0f Dropbox \uc800\uc7a5 \uc131\uacf5!", "success")
+            flash("\u2705 업로드 완료 및 Dropbox 저장 성공!", "success")
             return redirect(url_for('upload_file'))
 
     return render_template('upload.html')
 
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=10000)
 
