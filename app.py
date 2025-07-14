@@ -1,102 +1,94 @@
-import os
+from flask import Flask, request, render_template, flash, redirect
 import sqlite3
-import uuid
-import dropbox
-from flask import Flask, request, redirect, render_template, url_for, flash
-
-# Dropbox 토큰 및 경로 설정
-DROPBOX_ACCESS_TOKEN = "슬기롭게_토큰_입력하세요"
-DROPBOX_UPLOAD_PATH = "/FromData_Result"
+import os
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
-DATABASE = os.path.join(BASE_DIR, 'database.db')
 
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+UPLOAD_FOLDER = './uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(os.path.dirname(DATABASE), exist_ok=True)
 
-def init_db():
+DATABASE = './uploads.db'
+
+def get_db():
     conn = sqlite3.connect(DATABASE)
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS uploads (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT, phone TEXT, device TEXT, filename TEXT, downloaded INTEGER DEFAULT 0,
-            section1 TEXT, scenario1 TEXT,
-            section2 TEXT, scenario2 TEXT,
-            section3 TEXT, scenario3 TEXT,
-            section4 TEXT, scenario4 TEXT,
-            section5 TEXT, scenario5 TEXT,
-            section6 TEXT, scenario6 TEXT,
-            section7 TEXT, scenario7 TEXT,
-            section8 TEXT, scenario8 TEXT,
-            section9 TEXT, scenario9 TEXT,
-            section10 TEXT, scenario10 TEXT,
-            washer TEXT, aircon TEXT,
-            additional_appliances_1 TEXT, additional_appliances_2 TEXT,
-            residence TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
-init_db()
-
-def upload_to_dropbox(local_path, dropbox_path):
-    dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
-    with open(local_path, "rb") as f:
-        dbx.files_upload(f.read(), dropbox_path, mode=dropbox.files.WriteMode.overwrite)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
-        name = request.form['name']
-        phone = request.form['phone']
-        device = request.form.get('device', '') or ''
-        file = request.files['file']
+        print("✅ POST 요청 도착 - 디버깅 시작")
 
-        if file:
-            ext = os.path.splitext(file.filename)[1]
-            unique_filename = f"{uuid.uuid4().hex}{ext}"
-            local_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-            file.save(local_path)
+        name = request.form.get('name', '')
+        phone = request.form.get('phone', '')
+        device = request.form.get('device', '')
 
-            try:
-                dropbox_path = f"{DROPBOX_UPLOAD_PATH}/{unique_filename}"
-                upload_to_dropbox(local_path, dropbox_path)
-            except Exception as e:
-                flash("\u274c Dropbox 업로드 실패: " + str(e), "error")
-                return redirect(url_for('upload_file'))
+        file = request.files.get('file')
+        if not file:
+            flash('파일이 선택되지 않았습니다.', 'error')
+            return redirect(request.url)
+        filename = secure_filename(file.filename)
+        unique_filename = filename
+        file.save(os.path.join(UPLOAD_FOLDER, unique_filename))
 
-            sections = []
-            for i in range(1, 11):
-                sections.append(request.form.get(f'section_{i}', '') or '')
-                sections.append(request.form.get(f'scenario_{i}', '') or '')
+        # sections, scenarios 합치기 (10개씩 총 20개)
+        sections = []
+        for i in range(1, 11):
+            section_val = request.form.get(f'section_{i}', '')
+            scenario_val = request.form.get(f'scenario_{i}', '')
+            sections.append(section_val)
+            sections.append(scenario_val)
 
-            # 로그 찍기 (디버깅용)
-            print(f"✅ sections 길이: {len(sections)}")   # 꼭 20개여야 함
-            print(f"📋 sections 내용: {sections}")
+        print(f"sections 개수: {len(sections)}")  # 20개여야 함
+        print("sections 내용:", sections)
 
-            washer = request.form.get('washer', '') or ''
-            aircon = request.form.get('aircon', '') or ''
-            additional_appliances_1 = request.form.get('additional_appliances_1', '') or ''
-            additional_appliances_2 = request.form.get('additional_appliances_2', '') or ''
-            residence = request.form.get('residence', '') or ''
+        washer = request.form.get('washer', '')
+        aircon = request.form.get('aircon', '')
+        additional_appliances_1 = request.form.get('additional_appliances_1', '')
+        additional_appliances_2 = request.form.get('additional_appliances_2', '')
+        residence = request.form.get('residence', '')
 
-            values_tuple = (
-                name, phone, device, unique_filename, 0,
-                *sections,
-                washer, aircon, additional_appliances_1, additional_appliances_2, residence
-            )
+        # 총 29개 값이 맞는지 확인
+        values = (
+            name, phone, device, unique_filename, 0,
+            *sections,
+            washer, aircon, additional_appliances_1, additional_appliances_2, residence
+        )
 
-            print(f"✅ values_tuple 길이: {len(values_tuple)}")  # 꼭 29개여야 함
-            print(f"📋 values_tuple 내용: {values_tuple}")
+        print(f"values 개수: {len(values)}")  # 반드시 29개여야 함
+        print("values 내용:", values)
 
-            conn = sqlite3.connect(DATABASE)
+        try:
+            conn = get_db()
             c = conn.cursor()
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS uploads (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT,
+                    phone TEXT,
+                    device TEXT,
+                    filename TEXT,
+                    downloaded INTEGER,
+                    section1 TEXT, scenario1 TEXT,
+                    section2 TEXT, scenario2 TEXT,
+                    section3 TEXT, scenario3 TEXT,
+                    section4 TEXT, scenario4 TEXT,
+                    section5 TEXT, scenario5 TEXT,
+                    section6 TEXT, scenario6 TEXT,
+                    section7 TEXT, scenario7 TEXT,
+                    section8 TEXT, scenario8 TEXT,
+                    section9 TEXT, scenario9 TEXT,
+                    section10 TEXT, scenario10 TEXT,
+                    washer TEXT,
+                    aircon TEXT,
+                    additional_appliances_1 TEXT,
+                    additional_appliances_2 TEXT,
+                    residence TEXT
+                )
+            ''')
+
             c.execute('''
                 INSERT INTO uploads (
                     name, phone, device, filename, downloaded,
@@ -113,16 +105,35 @@ def upload_file():
                     washer, aircon,
                     additional_appliances_1, additional_appliances_2,
                     residence
+                ) VALUES (
+                    ?, ?, ?, ?, ?,
+                    ?, ?,
+                    ?, ?,
+                    ?, ?,
+                    ?, ?,
+                    ?, ?,
+                    ?, ?,
+                    ?, ?,
+                    ?, ?,
+                    ?, ?,
+                    ?, ?, ?, ?, ?
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', values_tuple)
+            ''', values)
             conn.commit()
+            flash('업로드 성공!', 'success')
+            print("✅ DB 저장 성공")
+        except Exception as e:
+            print("❌ DB 저장 중 오류:", e)
+            flash(f'오류 발생: {e}', 'error')
+            return redirect(request.url)
+        finally:
             conn.close()
-            flash("\u2705 업로드 완료 및 Dropbox 저장 성공!", "success")
-            return redirect(url_for('upload_file'))
+
+        return redirect(request.url)
 
     return render_template('upload.html')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
+
 
