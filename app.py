@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, redirect, flash, url_for
 import os
 import sqlite3
 from werkzeug.utils import secure_filename
-from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
@@ -42,7 +41,7 @@ def init_db():
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
-    print("✅ 디버깅 시작")  # 코드 반영 확인용
+    print("✅ 디버깅 시작")  # 이 로그가 찍히면 코드가 반영된 것임
 
     if request.method == 'POST':
         name = request.form['name']
@@ -77,6 +76,7 @@ def upload_file():
         ]
 
         print("🧮 values 개수:", len(values))
+        print("📋 values 내용:", values)
 
         try:
             with sqlite3.connect(DB_FILE) as conn:
